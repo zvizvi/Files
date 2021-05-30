@@ -12,14 +12,12 @@
     xmlns:controls="using:Microsoft.UI.Xaml.Controls"
     xmlns:local="using:CommandBarFlyoutStyle"
     xmlns:local1="using:Microsoft.UI.Xaml.Controls.Primitives">
-    <!--<Style
+    <Style
         x:Key="ZeeCommandBarFlyoutCommandBarStyle"
         BasedOn="{StaticResource DefaultCommandBarFlyoutCommandBarStyle}"
         TargetType="local1:CommandBarFlyoutCommandBar">
         <Setter Property="DefaultLabelPosition" Value="Right" />
-    </Style>-->
-
-    <Style BasedOn="{StaticResource ZeeCommandBarFlyoutCommandBarStyle}" TargetType="local1:CommandBarFlyoutCommandBar" />
+    </Style>
 
     <Style
         x:Key="ZeeCommandBarFlyoutAppBarButtonStyleBase"
