@@ -188,7 +188,8 @@ namespace Files.Helpers.ContextFlyouts
                     CommandParameter = item.CommandParameter,
                     IsChecked = item.IsChecked,
                     Content = content,
-                    IsEnabled = item.IsEnabled
+                    IsEnabled = item.IsEnabled,
+                    Style = App.Current.Resources["ZeeCommandBarFlyoutAppBarToggleButtonStyleBase"] as Style,
                 };
 
                 if (icon != null)
