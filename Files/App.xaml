@@ -31,6 +31,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" ControlsResourcesVersion="Version2" />
                 <ResourceDictionary Source="/ResourceDictionaries/CustomHeaderStyle.xaml" />
+                <ResourceDictionary Source="/ResourceDictionaries/ZeeCommandBarFlyoutResources.xaml" />
                 <ResourceDictionary>
                     <ResourceDictionary.ThemeDictionaries>
                         <ResourceDictionary x:Key="Light">

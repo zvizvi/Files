@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 
@@ -210,7 +211,8 @@ namespace Files.Helpers.ContextFlyouts
                     CommandParameter = item.CommandParameter,
                     Flyout = ctxFlyout,
                     Content = content,
-                    IsEnabled = item.IsEnabled
+                    IsEnabled = item.IsEnabled,
+                    Style = App.Current.Resources["ZeeCommandBarFlyoutAppBarButtonStyleBase"] as Style,
                 };
 
                 if (icon != null)
