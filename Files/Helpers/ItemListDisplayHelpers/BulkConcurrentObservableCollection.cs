@@ -234,8 +234,8 @@ namespace Files.Helpers
             GroupedCollection?.ForEach(gp => gp.EndBulkOperation());
             GroupedCollection?.EndBulkOperation();
 
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, itemsAddedDuringBulkOperation));
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, itemsRemovedDuringBulkOperation));
+            itemsAddedDuringBulkOperation.ForEach(i => OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, i)));
+            itemsRemovedDuringBulkOperation.ForEach(i => OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, i)));
             itemsAddedDuringBulkOperation.Clear();
             itemsRemovedDuringBulkOperation.Clear();
         }
