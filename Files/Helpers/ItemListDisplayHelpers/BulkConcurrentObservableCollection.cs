@@ -22,6 +22,10 @@ namespace Files.Helpers
         private readonly object syncRoot = new object();
         private readonly List<T> collection = new List<T>();
 
+        private readonly object itemsChangedSyncRoot = new object();
+        private readonly List<T> itemsRemovedDuringBulkOperation = new List<T>();
+        private readonly List<T> itemsAddedDuringBulkOperation = new List<T>();
+
         public BulkConcurrentObservableCollection<GroupedCollection<T>> GroupedCollection { get; private set; }
         public bool IsSorted { get; set; }
 
@@ -117,6 +121,22 @@ namespace Files.Helpers
                 if (countChanged)
                 {
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
+                }
+            } else
+            {
+                if(e.NewItems != null)
+                {
+                    lock(itemsChangedSyncRoot)
+                    {
+                        itemsAddedDuringBulkOperation.AddRange(e.NewItems.Cast<T>());
+                    }
+                }
+                if(e.OldItems != null)
+                {
+                    lock (itemsChangedSyncRoot)
+                    {
+                        itemsRemovedDuringBulkOperation.AddRange(e.OldItems.Cast<T>());
+                    }
                 }
             }
 
@@ -214,9 +234,10 @@ namespace Files.Helpers
             GroupedCollection?.ForEach(gp => gp.EndBulkOperation());
             GroupedCollection?.EndBulkOperation();
 
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Item[]"));
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, itemsAddedDuringBulkOperation));
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, itemsRemovedDuringBulkOperation));
+            itemsAddedDuringBulkOperation.Clear();
+            itemsRemovedDuringBulkOperation.Clear();
         }
 
         public void Add(T item)
