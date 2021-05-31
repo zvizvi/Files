@@ -277,12 +277,14 @@ namespace Files.Views
         private async void Test()
         {
             Stopwatch sw = new Stopwatch();
-            sw.Start();
 
+            var numOfTests = NumberOfTestssBox.Value;
             long enumTimeSum = 0;
             long itemPropsTimeSum = 0;
 
-            for (int i = 1; i <= 10; i++)
+            sw.Start();
+
+            for (int i = 1; i <= numOfTests; i++)
             {
                 await SidebarAdaptiveViewModel.PaneHolder.ActivePane.FilesystemViewModel.RefreshItems(null);
                 var enumTime = sw.ElapsedMilliseconds;
@@ -300,7 +302,7 @@ namespace Files.Views
                 sw.Stop();
                 (OutputTextBlock.Blocks[0] as Paragraph).Inlines.Add(new Run()
                 {
-                    Text = string.Format("{0, 16}  {1, 40}  {2, 40}", i, enumTime, sw.ElapsedMilliseconds)
+                    Text = string.Format("{0, 16}  {1, 40}ms  {2, 40}ms", i, enumTime, sw.ElapsedMilliseconds)
                 });
 
                 (OutputTextBlock.Blocks[0] as Paragraph).Inlines.Add(new LineBreak());
@@ -313,7 +315,7 @@ namespace Files.Views
             (OutputTextBlock.Blocks[0] as Paragraph).Inlines.Add(new LineBreak());
             (OutputTextBlock.Blocks[0] as Paragraph).Inlines.Add(new Run()
             {
-                Text = string.Format("{0, 16}  {1, 40}  {2, 40}", "Avg", (double)enumTimeSum / 10, (double)itemPropsTimeSum / 10)
+                Text = string.Format("{0, 16}  {1, 40}ms {2, 40}ms", "Avg", enumTimeSum / numOfTests, itemPropsTimeSum / numOfTests)
             });
 
 
