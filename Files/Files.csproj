@@ -567,9 +567,6 @@
       <DependentUpon>Preferences.xaml</DependentUpon>
     </Compile>
     <Compile Include="ViewModels\SettingsViewModel.cs" />
-    <Compile Include="Views\TestPage.xaml.cs">
-      <DependentUpon>TestPage.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Views\WidgetsPage.xaml.cs">
       <DependentUpon>WidgetsPage.xaml</DependentUpon>
     </Compile>
@@ -1058,10 +1055,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="ResourceDictionaries\ToolbarButtonStyle.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\TestPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

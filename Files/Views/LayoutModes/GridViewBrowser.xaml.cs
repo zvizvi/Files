@@ -536,9 +536,8 @@ namespace Files.Views.LayoutModes
                 args.ItemContainer.PointerPressed += FileListGridItem_PointerPressed;
                 args.ItemContainer.CanDrag = args.ItemContainer.IsSelected; // Update CanDrag
 
-                item.ItemPropertiesInitialized = true;
-
-                await ParentShellPageInstance.FilesystemViewModel.LoadExtendedItemProperties(item, currentIconSize);
+                //item.ItemPropertiesInitialized = true;
+                //await ParentShellPageInstance.FilesystemViewModel.LoadExtendedItemProperties(item, currentIconSize);
             }
         }
 

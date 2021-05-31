@@ -6,6 +6,9 @@ using Files.UserControls.MultitaskingControl;
 using Files.ViewModels;
 using Microsoft.Toolkit.Uwp;
 using System;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
 using Windows.ApplicationModel.AppService;
 using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.Resources.Core;
@@ -14,6 +17,7 @@ using Windows.Storage;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Navigation;
 
 namespace Files.Views
@@ -246,6 +250,83 @@ namespace Files.Views
         {
             // Defers the status bar loading until after the page has loaded to improve startup perf
             FindName(nameof(StatusBarControl));
+        }
+
+        private async void Button_Click(object sender, RoutedEventArgs e)
+        {
+            BeginTestButton.IsEnabled = false;
+            try
+            {
+                await NavigationHelpers.OpenPath(@"C:\Windows\System32", SidebarAdaptiveViewModel.PaneHolder?.ActivePane);
+                SidebarAdaptiveViewModel.PaneHolder.ActivePane.FilesystemViewModel.ItemLoadStatusChanged += FilesystemViewModel_ItemLoadStatusChanged;
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        private void FilesystemViewModel_ItemLoadStatusChanged(object sender, ItemLoadStatusChangedEventArgs e)
+        {
+            if (e.Status == ItemLoadStatusChangedEventArgs.ItemLoadStatus.Complete)
+            {
+                Test();
+                SidebarAdaptiveViewModel.PaneHolder.ActivePane.FilesystemViewModel.ItemLoadStatusChanged -= FilesystemViewModel_ItemLoadStatusChanged;
+            }
+        }
+
+        private async void Test()
+        {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+
+            long enumTimeSum = 0;
+            long itemPropsTimeSum = 0;
+
+            for (int i = 1; i <= 10; i++)
+            {
+                await SidebarAdaptiveViewModel.PaneHolder.ActivePane.FilesystemViewModel.RefreshItems(null);
+                var enumTime = sw.ElapsedMilliseconds;
+                sw.Restart();
+
+                foreach (var item in SidebarAdaptiveViewModel.PaneHolder.ActivePane.FilesystemViewModel.FilesAndFolders.ToList().GetRange(0,300))
+                {
+                    if(!item.ItemPropertiesInitialized)
+                    {
+                        item.ItemPropertiesInitialized = true;
+                        await SidebarAdaptiveViewModel.PaneHolder.ActivePane.FilesystemViewModel.LoadExtendedItemProperties(item, 20);
+                    }
+                }
+
+                sw.Stop();
+                (OutputTextBlock.Blocks[0] as Paragraph).Inlines.Add(new Run()
+                {
+                    Text = string.Format("{0, 16}  {1, 40}  {2, 40}", i, enumTime, sw.ElapsedMilliseconds)
+                });
+
+                (OutputTextBlock.Blocks[0] as Paragraph).Inlines.Add(new LineBreak());
+
+                enumTimeSum += enumTime;
+                itemPropsTimeSum += sw.ElapsedMilliseconds;
+                sw.Restart();
+            }
+
+            (OutputTextBlock.Blocks[0] as Paragraph).Inlines.Add(new LineBreak());
+            (OutputTextBlock.Blocks[0] as Paragraph).Inlines.Add(new Run()
+            {
+                Text = string.Format("{0, 16}  {1, 40}  {2, 40}", "Avg", (double)enumTimeSum / 10, (double)itemPropsTimeSum / 10)
+            });
+
+
+            BeginTestButton.IsEnabled = true;
+        }
+
+        private void OutputTextBlock_Loaded(object sender, RoutedEventArgs e)
+        {
+            (OutputTextBlock.Blocks[0] as Paragraph).Inlines.Add(new Run()
+            {
+                Text = string.Format("{0, 16} | {1, 40} | {2, 40}", "Test #", "Enumeration", "300 item props")
+            });
+            (OutputTextBlock.Blocks[0] as Paragraph).Inlines.Add(new LineBreak());
         }
     }
 }

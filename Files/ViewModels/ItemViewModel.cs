@@ -951,12 +951,12 @@ namespace Files.ViewModels
             return null;
         }
 
-        public void RefreshItems(string previousDir)
+        public async Task RefreshItems(string previousDir)
         {
-            RapidAddItemsToCollectionAsync(WorkingDirectory, previousDir);
+            await RapidAddItemsToCollectionAsync(WorkingDirectory, previousDir);
         }
 
-        private async void RapidAddItemsToCollectionAsync(string path, string previousDir)
+        private async Task RapidAddItemsToCollectionAsync(string path, string previousDir)
         {
             ItemLoadStatusChanged?.Invoke(this, new ItemLoadStatusChangedEventArgs() { Status = ItemLoadStatusChangedEventArgs.ItemLoadStatus.Starting });
 
