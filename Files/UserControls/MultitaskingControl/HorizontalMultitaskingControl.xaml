@@ -35,6 +35,7 @@
                         Opening="TabItemContextMenu_Opening">
                         <MenuFlyoutItem
                             x:Uid="HorizontalMultitaskingControlNewTab"
+                            KeyboardAcceleratorTextOverride="Ctrl+T"
                             Click="AddNewTabAtIndex"
                             Text="New tab">
                             <MenuFlyoutItem.Icon>
@@ -74,6 +75,7 @@
                             x:Name="MenuItemReopenClosedTab"
                             x:Uid="HorizontalMultitaskingControlReopenClosedTab"
                             Click="ReopenClosedTab"
+                            KeyboardAcceleratorTextOverride="Ctrl+Shift+T"
                             Text="Reopen closed tab">
                             <MenuFlyoutItem.KeyboardAccelerators>
                                 <KeyboardAccelerator
