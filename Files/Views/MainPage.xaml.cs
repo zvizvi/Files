@@ -7,6 +7,7 @@ using Files.UserControls.MultitaskingControl;
 using Files.ViewModels;
 using Microsoft.Toolkit.Mvvm.Input;
 using Microsoft.Toolkit.Uwp;
+using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Threading.Tasks;
 using System.ComponentModel;
@@ -40,6 +41,8 @@ namespace Files.Views
             set => DataContext = value;
         }
 
+        public TabViewItem SelectedTabItem => horizontalMultitaskingControl.ContainerFromItem(horizontalMultitaskingControl.SelectedItem) as TabViewItem;
+
         public SidebarViewModel SidebarAdaptiveViewModel = new SidebarViewModel();
 
         public StatusCenterViewModel StatusCenterViewModel => App.StatusCenterViewModel;
@@ -70,6 +73,33 @@ namespace Files.Views
             App.AppSettings.PropertyChanged += AppSettings_PropertyChanged;
         }
 
+        private void MultitaskingControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            BaseMultitaskingControl control = (BaseMultitaskingControl)sender;
+            var selectedTabViewItem = control.ContainerFromItem(control.SelectedItem) as TabViewItem;
+
+            if (control.SelectedIndex >= 0 && selectedTabViewItem.IsLoaded)
+            {
+                NotifyPropertyChanged(nameof(SelectedTabItem));
+                var x = selectedTabViewItem.ContentTemplate.LoadContent() as Frame;
+                if (x.IsLoaded)
+                {
+                    var selectedTabContent = x.Content as ITabItemContent;
+
+                    if (SidebarAdaptiveViewModel.PaneHolder != null)
+                    {
+                        SidebarAdaptiveViewModel.PaneHolder.PropertyChanged -= PaneHolder_PropertyChanged;
+                    }
+                    SidebarAdaptiveViewModel.PaneHolder = selectedTabContent as IPaneHolder;
+                    SidebarAdaptiveViewModel.PaneHolder.PropertyChanged += PaneHolder_PropertyChanged;
+                    SidebarAdaptiveViewModel.NotifyInstanceRelatedPropertiesChanged((selectedTabContent.TabItemArguments?.NavigationArg as PaneNavigationArguments).LeftPaneNavPathParam);
+                    UpdateStatusBarProperties();
+                    UpdateNavToolbarProperties();
+                    UpdatePreviewPaneProperties();
+                }
+            }
+        }
+
         private void AppSettings_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             switch (e.PropertyName)
@@ -79,8 +109,6 @@ namespace Files.Views
                     break;
             }
         }
-
-        public UserControl MultitaskingControl => VerticalTabs;
 
         private void VerticalTabStrip_Tapped(object sender, TappedRoutedEventArgs e)
         {
@@ -98,9 +126,10 @@ namespace Files.Views
         {
             if (!(ViewModel.MultitaskingControl is VerticalTabViewControl))
             {
-                ViewModel.MultitaskingControl = VerticalTabs;
+                //ViewModel.MultitaskingControl = VerticalTabs;
                 ViewModel.MultitaskingControls.Add(VerticalTabs);
-                ViewModel.MultitaskingControl.CurrentInstanceChanged += MultitaskingControl_CurrentInstanceChanged;
+                //VerticalTabs.SelectionChanged -= MultitaskingControl_SelectionChanged;
+                //VerticalTabs.SelectionChanged += MultitaskingControl_SelectionChanged;
             }
         }
 
@@ -120,7 +149,8 @@ namespace Files.Views
             {
                 ViewModel.MultitaskingControl = horizontalMultitaskingControl;
                 ViewModel.MultitaskingControls.Add(horizontalMultitaskingControl);
-                ViewModel.MultitaskingControl.CurrentInstanceChanged += MultitaskingControl_CurrentInstanceChanged;
+                horizontalMultitaskingControl.SelectionChanged -= MultitaskingControl_SelectionChanged;
+                horizontalMultitaskingControl.SelectionChanged += MultitaskingControl_SelectionChanged;
             }
         }
 
@@ -135,22 +165,6 @@ namespace Files.Views
                 UpdatePreviewPaneProperties();
                 UpdateNavToolbarProperties();
             }
-        }
-
-        public void MultitaskingControl_CurrentInstanceChanged(object sender, CurrentInstanceChangedEventArgs e)
-        {
-            if (SidebarAdaptiveViewModel.PaneHolder != null)
-            {
-                SidebarAdaptiveViewModel.PaneHolder.PropertyChanged -= PaneHolder_PropertyChanged;
-            }
-            SidebarAdaptiveViewModel.PaneHolder = e.CurrentInstance as IPaneHolder;
-            SidebarAdaptiveViewModel.PaneHolder.PropertyChanged += PaneHolder_PropertyChanged;
-            SidebarAdaptiveViewModel.NotifyInstanceRelatedPropertiesChanged((e.CurrentInstance.TabItemArguments?.NavigationArg as PaneNavigationArguments).LeftPaneNavPathParam);
-            UpdateStatusBarProperties();
-            UpdateNavToolbarProperties();
-            UpdatePreviewPaneProperties();
-            e.CurrentInstance.ContentChanged -= TabItemContent_ContentChanged;
-            e.CurrentInstance.ContentChanged += TabItemContent_ContentChanged;
         }
 
         private void PaneHolder_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -323,6 +337,8 @@ namespace Files.Views
             // Defers the status bar loading until after the page has loaded to improve startup perf
             FindName(nameof(StatusBarControl));
             FindName(nameof(InnerNavigationToolbar));
+
+            
         }
 
         private void ToggleFullScreenAccelerator(KeyboardAcceleratorInvokedEventArgs e)

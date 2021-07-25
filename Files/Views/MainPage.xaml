@@ -409,7 +409,8 @@
                 Grid.Row="1"
                 Grid.Column="0"
                 HorizontalAlignment="Stretch"
-                Content="{x:Bind ((viewmodels:MainPageViewModel)DataContext).SelectedTabItem.Control, Mode=OneWay}" />
+				ContentTemplate="{x:Bind SelectedTabItem.ContentTemplate, Mode=OneWay}"
+                Content="{x:Bind SelectedTabItem.Content, Mode=OneWay}" />
 
             <Custom:DropShadowPanel
                 x:Name="PreviewPaneDropShadowPanel"

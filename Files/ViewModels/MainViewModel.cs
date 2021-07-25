@@ -55,23 +55,7 @@ namespace Files.ViewModels
         public int TabStripSelectedIndex
         {
             get => tabStripSelectedIndex;
-            set
-            {
-                if (value >= 0)
-                {
-                    if (tabStripSelectedIndex != value)
-                    {
-                        SetProperty(ref tabStripSelectedIndex, value);
-                    }
-
-                    if (value < MainPageViewModel.AppInstances.Count)
-                    {
-                        Frame rootFrame = Window.Current.Content as Frame;
-                        var mainView = rootFrame.Content as MainPage;
-                        mainView.ViewModel.SelectedTabItem = MainPageViewModel.AppInstances[value];
-                    }
-                }
-            }
+            set => SetProperty(ref tabStripSelectedIndex, value);
         }
 
         private bool isFullTrustElevated = false;

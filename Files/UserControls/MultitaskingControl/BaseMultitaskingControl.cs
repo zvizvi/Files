@@ -1,6 +1,7 @@
 ﻿using Files.Helpers;
 using Files.ViewModels;
-using Microsoft.Toolkit.Uwp.UI;
+using Files.Views;
+using Microsoft.Toolkit.Uwp;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
@@ -8,35 +9,26 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
 namespace Files.UserControls.MultitaskingControl
 {
-    public class BaseMultitaskingControl : UserControl, IMultitaskingControl, INotifyPropertyChanged
+    public class BaseMultitaskingControl : TabView, IMultitaskingControl, INotifyPropertyChanged
     {
         private static bool isRestoringClosedTab = false; // Avoid reopening two tabs
-
-        protected ITabItemContent CurrentSelectedAppInstance;
 
         public const string TabDropHandledIdentifier = "FilesTabViewItemDropHandled";
 
         public const string TabPathIdentifier = "FilesTabViewItemPath";
 
-        public event EventHandler<CurrentInstanceChangedEventArgs> CurrentInstanceChanged;
-
         public event PropertyChangedEventHandler PropertyChanged;
-
-        public virtual DependencyObject ContainerFromItem(ITabItem item)
-        {
-            return null;
-        }
-
-        public void SelectionChanged() => TabStrip_SelectionChanged(null, null);
 
         public BaseMultitaskingControl()
         {
-            Loaded += MultitaskingControl_Loaded;
+            SelectionChanged += TabStrip_SelectionChanged;
+            TabItemsChanged += TabView_TabItemsChanged;
         }
 
         public ObservableCollection<TabItem> Items => MainPageViewModel.AppInstances;
@@ -44,37 +36,34 @@ namespace Files.UserControls.MultitaskingControl
         // RecentlyClosedTabs is shared between all multitasking controls
         public static List<ITabItem> RecentlyClosedTabs { get; private set; } = new List<ITabItem>();
 
-        private void MultitaskingControl_CurrentInstanceChanged(object sender, CurrentInstanceChangedEventArgs e)
+        private void TabView_TabItemsChanged(TabView sender, Windows.Foundation.Collections.IVectorChangedEventArgs args)
         {
-            foreach (ITabItemContent instance in e.PageInstances)
-            {
-                if (instance != null)
-                {
-                    instance.IsCurrentInstance = instance == e.CurrentInstance;
-                }
-            }
+            SelectedIndex = Items.IndexOf(SelectedItem as TabItem);
         }
 
         protected void TabStrip_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (App.MainViewModel.TabStripSelectedIndex >= 0 && App.MainViewModel.TabStripSelectedIndex < Items.Count)
+            if (SelectedIndex >= 0)
             {
-                CurrentSelectedAppInstance = GetCurrentSelectedTabInstance();
-
-                if (CurrentSelectedAppInstance != null)
+                foreach(TabItem item in TabItems)
                 {
-                    CurrentInstanceChanged?.Invoke(this, new CurrentInstanceChangedEventArgs()
+                    var tabViewItem = ContainerFromItem(item) as TabViewItem;
+                    if (tabViewItem != null && tabViewItem.IsLoaded)
                     {
-                        CurrentInstance = CurrentSelectedAppInstance,
-                        PageInstances = GetAllTabInstances()
-                    });
+                        var x = tabViewItem.ContentTemplate.LoadContent() as Frame;
+                        if (x.IsLoaded)
+                        {
+                            (x.Content as ITabItemContent).IsCurrentInstance = tabViewItem.IsSelected;
+                        }
+                    }
                 }
             }
         }
 
-        protected void OnCurrentInstanceChanged(CurrentInstanceChangedEventArgs args)
+        public async Task AddNewTabAsync()
         {
-            CurrentInstanceChanged?.Invoke(this, args);
+            await MainPageViewModel.AddNewTabByPathAsync(typeof(PaneHolderPage), "NewTab".GetLocalized());
+            //SelectedIndex = Items.Count - 1;
         }
 
         protected void TabStrip_TabCloseRequested(TabView sender, TabViewTabCloseRequestedEventArgs args)
@@ -84,22 +73,30 @@ namespace Files.UserControls.MultitaskingControl
 
         protected async void TabView_AddTabButtonClick(TabView sender, object args)
         {
-            await MainPageViewModel.AddNewTabAsync();
+            await MainPageViewModel.AddNewTabByPathAsync(typeof(PaneHolderPage), "NewTab".GetLocalized());
+            //this.SelectedIndex = TabItems.Count - 1;
         }
 
-        public void MultitaskingControl_Loaded(object sender, RoutedEventArgs e)
+
+        public async void AddNewTabAtIndex(object sender, RoutedEventArgs e)
         {
-            CurrentInstanceChanged += MultitaskingControl_CurrentInstanceChanged;
+            await AddNewTabAsync();
         }
 
-        public ITabItemContent GetCurrentSelectedTabInstance()
+        public async void DuplicateTabAtIndex(object sender, RoutedEventArgs e)
         {
-            return MainPageViewModel.AppInstances[App.MainViewModel.TabStripSelectedIndex].Control?.TabItemContent;
-        }
+            var tabItem = ((FrameworkElement)sender).DataContext as TabItem;
+            var index = Items.IndexOf(tabItem);
 
-        public List<ITabItemContent> GetAllTabInstances()
-        {
-            return MainPageViewModel.AppInstances.Select(x => x.Control?.TabItemContent).ToList();
+            if (Items[index].TabItemArguments != null)
+            {
+                var tabArgs = Items[index].TabItemArguments;
+                await MainPageViewModel.AddNewTabByParam(tabArgs.InitialPageType, tabArgs.NavigationArg, index + 1);
+            }
+            else
+            {
+                await MainPageViewModel.AddNewTabByPathAsync(typeof(PaneHolderPage), "NewTab".GetLocalized());
+            }
         }
 
         public void CloseTabsToTheRight(object sender, RoutedEventArgs e)

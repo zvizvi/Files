@@ -21,12 +21,12 @@ namespace Files.Views
         public bool IsLeftPaneActive => ActivePane == PaneLeft;
         public bool IsRightPaneActive => ActivePane == PaneRight;
 
-        public event EventHandler<TabItemArguments> ContentChanged;
-
         public event PropertyChangedEventHandler PropertyChanged;
 
         public SettingsViewModel AppSettings => App.AppSettings;
         public IFilesystemHelpers FilesystemHelpers => ActivePane?.FilesystemHelpers;
+
+        private object navArgs = null;
 
         private TabItemArguments tabItemArguments;
 
@@ -38,7 +38,24 @@ namespace Files.Views
                 if (tabItemArguments != value)
                 {
                     tabItemArguments = value;
-                    ContentChanged?.Invoke(this, value);
+                    if (navArgs == null)
+                    {
+                        navArgs = value.NavigationArg;
+                        if (navArgs != null)
+                        {
+                            if (navArgs is string navPath)
+                            {
+                                NavParamsLeft = navPath;
+                                NavParamsRight = "NewTab".GetLocalized();
+                            }
+                            else if (navArgs is PaneNavigationArguments paneArgs)
+                            {
+                                NavParamsLeft = paneArgs.LeftPaneNavPathParam;
+                                NavParamsRight = paneArgs.RightPaneNavPathParam;
+                                IsRightPaneVisible = IsMultiPaneEnabled && paneArgs.RightPaneNavPathParam != null;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -197,18 +214,6 @@ namespace Files.Views
         protected override void OnNavigatedTo(NavigationEventArgs eventArgs)
         {
             base.OnNavigatedTo(eventArgs);
-
-            if (eventArgs.Parameter is string navPath)
-            {
-                NavParamsLeft = navPath;
-                NavParamsRight = "NewTab".GetLocalized();
-            }
-            if (eventArgs.Parameter is PaneNavigationArguments paneArgs)
-            {
-                NavParamsLeft = paneArgs.LeftPaneNavPathParam;
-                NavParamsRight = paneArgs.RightPaneNavPathParam;
-                IsRightPaneVisible = IsMultiPaneEnabled && paneArgs.RightPaneNavPathParam != null;
-            }
 
             TabItemArguments = new TabItemArguments()
             {

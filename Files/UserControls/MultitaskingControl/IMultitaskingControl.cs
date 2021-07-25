@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.UI.Xaml.Controls;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
@@ -6,13 +7,15 @@ namespace Files.UserControls.MultitaskingControl
 {
     public interface IMultitaskingControl
     {
-        public event EventHandler<CurrentInstanceChangedEventArgs> CurrentInstanceChanged;
-
         public ObservableCollection<TabItem> Items { get; }
 
-        public ITabItemContent GetCurrentSelectedTabInstance();
+        //public ITabItemContent GetCurrentSelectedTabInstance();
 
-        public List<ITabItemContent> GetAllTabInstances();
+        //public List<ITabItemContent> GetAllTabInstances();
+
+        public int SelectedIndex { get; set; }
+
+        public object SelectedItem { get; set; }
 
         public void CloseTab(TabItem tabItem);
         public void SetLoadingIndicatorStatus(ITabItem item, bool loading);

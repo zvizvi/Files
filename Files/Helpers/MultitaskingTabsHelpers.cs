@@ -54,12 +54,12 @@ namespace Files.Helpers
                 IconSource = fontIconSource,
                 Description = null
             };
-            tabItem.Control.NavigationArguments = new TabItemArguments()
+            tabItem.TabItemArguments = new TabItemArguments()
             {
                 InitialPageType = type,
                 NavigationArg = tabViewItemArgs
             };
-            tabItem.Control.ContentChanged += MainPageViewModel.Control_ContentChanged;
+            //tabItem.Control.ContentChanged += MainPageViewModel.Control_ContentChanged;
             await MainPageViewModel.UpdateTabInfo(tabItem, tabViewItemArgs);
             MainPageViewModel.AppInstances.Insert(atIndex == -1 ? MainPageViewModel.AppInstances.Count : atIndex, tabItem);
         }

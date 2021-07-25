@@ -1,11 +1,13 @@
 ﻿using Files.Helpers;
 using Files.ViewModels;
 using Microsoft.Toolkit.Uwp;
+using Microsoft.Toolkit.Uwp.UI;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
 
 namespace Files.UserControls.MultitaskingControl
 {
@@ -21,41 +23,19 @@ namespace Files.UserControls.MultitaskingControl
             tabHoverTimer.Tick += TabHoverSelected;
         }
 
-        private void VerticalTabView_TabItemsChanged(TabView sender, Windows.Foundation.Collections.IVectorChangedEventArgs args)
-        {
-            if (args.CollectionChange == Windows.Foundation.Collections.CollectionChange.ItemRemoved)
-            {
-                App.MainViewModel.TabStripSelectedIndex = Items.IndexOf(VerticalTabView.SelectedItem as TabItem);
-            }
-
-            if (App.MainViewModel.TabStripSelectedIndex >= 0 && App.MainViewModel.TabStripSelectedIndex < Items.Count)
-            {
-                CurrentSelectedAppInstance = GetCurrentSelectedTabInstance();
-
-                if (CurrentSelectedAppInstance != null)
-                {
-                    OnCurrentInstanceChanged(new CurrentInstanceChangedEventArgs()
-                    {
-                        CurrentInstance = CurrentSelectedAppInstance,
-                        PageInstances = GetAllTabInstances()
-                    });
-                }
-            }
-        }
-
         private async void TabViewItem_Drop(object sender, DragEventArgs e)
         {
-            e.AcceptedOperation = await ((sender as TabViewItem).DataContext as TabItem).Control.TabItemContent.TabItemDrop(sender, e);
-            VerticalTabView.CanReorderTabs = true;
+            e.AcceptedOperation = await (((sender as TabViewItem).ContentTemplate.LoadContent() as Frame).Content as ITabItemContent).TabItemDrop(sender, e);
+            CanReorderTabs = true;
             tabHoverTimer.Stop();
         }
 
         private void TabViewItem_DragEnter(object sender, DragEventArgs e)
         {
-            e.AcceptedOperation = ((sender as TabViewItem).DataContext as TabItem).Control.TabItemContent.TabItemDragOver(sender, e);
+            e.AcceptedOperation = (((sender as TabViewItem).ContentTemplate.LoadContent() as Frame).Content as ITabItemContent).TabItemDragOver(sender, e);
             if (e.AcceptedOperation != DataPackageOperation.None)
             {
-                VerticalTabView.CanReorderTabs = false;
+                CanReorderTabs = false;
                 tabHoverTimer.Start();
                 hoveredTabViewItem = sender as TabViewItem;
             }
@@ -73,7 +53,7 @@ namespace Files.UserControls.MultitaskingControl
             tabHoverTimer.Stop();
             if (hoveredTabViewItem != null)
             {
-                VerticalTabView.SelectedItem = hoveredTabViewItem;
+                SelectedItem = hoveredTabViewItem;
             }
         }
 
@@ -88,7 +68,7 @@ namespace Files.UserControls.MultitaskingControl
         {
             if (e.DataView.Properties.ContainsKey(TabPathIdentifier))
             {
-                VerticalTabView.CanReorderTabs = true;
+                CanReorderTabs = true;
                 e.AcceptedOperation = DataPackageOperation.Move;
                 e.DragUIOverride.Caption = "TabStripDragAndDropUIOverrideCaption".GetLocalized();
                 e.DragUIOverride.IsCaptionVisible = true;
@@ -96,18 +76,18 @@ namespace Files.UserControls.MultitaskingControl
             }
             else
             {
-                VerticalTabView.CanReorderTabs = false;
+                CanReorderTabs = false;
             }
         }
 
         private void TabStrip_DragLeave(object sender, DragEventArgs e)
         {
-            VerticalTabView.CanReorderTabs = true;
+            CanReorderTabs = true;
         }
 
         private async void TabStrip_TabStripDrop(object sender, DragEventArgs e)
         {
-            VerticalTabView.CanReorderTabs = true;
+            CanReorderTabs = true;
             if (!(sender is TabView tabStrip))
             {
                 return;
@@ -145,7 +125,7 @@ namespace Files.UserControls.MultitaskingControl
             }
             else
             {
-                VerticalTabView.SelectedItem = args.Tab;
+                SelectedItem = args.Tab;
             }
 
             if (ApplicationData.Current.LocalSettings.Values.ContainsKey(TabDropHandledIdentifier))
@@ -171,7 +151,5 @@ namespace Files.UserControls.MultitaskingControl
                 sender.SelectedIndex = selectedTabViewItemIndex;
             }
         }
-
-        public override DependencyObject ContainerFromItem(ITabItem item) => VerticalTabView.ContainerFromItem(item);
     }
 }

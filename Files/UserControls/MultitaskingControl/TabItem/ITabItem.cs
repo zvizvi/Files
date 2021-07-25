@@ -16,9 +16,7 @@ namespace Files.UserControls.MultitaskingControl
     {
         public bool IsCurrentInstance { get; set; }
 
-        public TabItemArguments TabItemArguments { get; }
-
-        public event EventHandler<TabItemArguments> ContentChanged;
+        public TabItemArguments TabItemArguments { get; set; }
 
         public DataPackageOperation TabItemDragOver(object sender, DragEventArgs e);
 

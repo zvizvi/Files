@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace Files.UserControls.MultitaskingControl
 {
-    public class TabItem : ObservableObject, ITabItem, ITabItemControl, IDisposable
+    public class TabItem : ObservableObject, ITabItem, IDisposable
     {
         private string header;
 
@@ -36,7 +36,7 @@ namespace Files.UserControls.MultitaskingControl
             set => SetProperty(ref iconSource, value);
         }
 
-        public TabItemControl Control { get; private set; }
+        public WeakReference<TabViewItem> ItemContainer { get; set; }
 
         private bool allowStorageItemDrop;
 
@@ -50,18 +50,16 @@ namespace Files.UserControls.MultitaskingControl
 
         public TabItemArguments TabItemArguments
         {
-            get => Control?.NavigationArguments ?? tabItemArguments;
+            get => tabItemArguments;
+            set => SetProperty(ref tabItemArguments, value);
         }
 
         public TabItem()
         {
-            Control = new TabItemControl();
         }
 
         public void Unload()
         {
-            Control.ContentChanged -= MainPageViewModel.Control_ContentChanged;
-            tabItemArguments = Control?.NavigationArguments;
             Dispose();
         }
 
@@ -69,8 +67,6 @@ namespace Files.UserControls.MultitaskingControl
 
         public void Dispose()
         {
-            Control?.Dispose();
-            Control = null;
         }
 
         #endregion IDisposable

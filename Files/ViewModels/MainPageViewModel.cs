@@ -27,7 +27,7 @@ namespace Files.ViewModels
 {
     public class MainPageViewModel : ObservableObject
     {
-        public IMultitaskingControl MultitaskingControl { get; set; }
+        public BaseMultitaskingControl MultitaskingControl { get; set; }
         public List<IMultitaskingControl> MultitaskingControls { get; } = new List<IMultitaskingControl>();
 
         public static ObservableCollection<TabItem> AppInstances { get; private set; } = new ObservableCollection<TabItem>();
@@ -171,36 +171,12 @@ namespace Files.ViewModels
             }
             else // ctrl + shift + t, restore recently closed tab
             {
-                ((BaseMultitaskingControl)MultitaskingControl).ReopenClosedTab(null, null);
+                MultitaskingControl.ReopenClosedTab(null, null);
             }
             e.Handled = true;
         }
 
-        public static async Task AddNewTabByPathAsync(Type type, string path, int atIndex = -1)
-        {
-            Microsoft.UI.Xaml.Controls.FontIconSource fontIconSource = new Microsoft.UI.Xaml.Controls.FontIconSource();
-            fontIconSource.FontFamily = App.MainViewModel.FontName;
-
-            if (string.IsNullOrEmpty(path))
-            {
-                path = "NewTab".GetLocalized();
-            }
-
-            TabItem tabItem = new TabItem()
-            {
-                Header = null,
-                IconSource = fontIconSource,
-                Description = null
-            };
-            tabItem.Control.NavigationArguments = new TabItemArguments()
-            {
-                InitialPageType = type,
-                NavigationArg = path
-            };
-            tabItem.Control.ContentChanged += Control_ContentChanged;
-            await UpdateTabInfo(tabItem, path);
-            AppInstances.Insert(atIndex == -1 ? AppInstances.Count : atIndex, tabItem);
-        }
+        
 
         public static async Task UpdateTabInfo(TabItem tabItem, object navigationArg)
         {
@@ -440,10 +416,36 @@ namespace Files.ViewModels
             }
         }
 
-        public static async Task AddNewTabAsync()
+        public async Task AddNewTabAsync()
         {
             await AddNewTabByPathAsync(typeof(PaneHolderPage), "NewTab".GetLocalized());
-            App.MainViewModel.TabStripSelectedIndex = AppInstances.Count - 1;
+            //App.MainViewModel.TabStripSelectedIndex = AppInstances.Count - 1;
+        }
+
+        public static async Task AddNewTabByPathAsync(Type type, string path, int atIndex = -1)
+        {
+            Microsoft.UI.Xaml.Controls.FontIconSource fontIconSource = new Microsoft.UI.Xaml.Controls.FontIconSource();
+            fontIconSource.FontFamily = App.MainViewModel.FontName;
+
+            if (string.IsNullOrEmpty(path))
+            {
+                path = "NewTab".GetLocalized();
+            }
+
+            TabItem tabItem = new TabItem()
+            {
+                Header = null,
+                IconSource = fontIconSource,
+                Description = null
+            };
+            tabItem.TabItemArguments = new TabItemArguments()
+            {
+                InitialPageType = type,
+                NavigationArg = path
+            };
+            //tabItem.Control.ContentChanged += Control_ContentChanged;
+            await MainPageViewModel.UpdateTabInfo(tabItem, path);
+            AppInstances.Insert(atIndex == -1 ? AppInstances.Count : atIndex, tabItem);
         }
 
         public async void AddNewTab()
@@ -451,12 +453,12 @@ namespace Files.ViewModels
             await AddNewTabAsync();
         }
 
-        public static async void AddNewTabAtIndex(object sender, RoutedEventArgs e)
+        public async void AddNewTabAtIndex(object sender, RoutedEventArgs e)
         {
             await AddNewTabAsync();
         }
 
-        public static async void DuplicateTabAtIndex(object sender, RoutedEventArgs e)
+        public async void DuplicateTabAtIndex(object sender, RoutedEventArgs e)
         {
             var tabItem = ((FrameworkElement)sender).DataContext as TabItem;
             var index = AppInstances.IndexOf(tabItem);
@@ -483,25 +485,25 @@ namespace Files.ViewModels
                 IconSource = fontIconSource,
                 Description = null
             };
-            tabItem.Control.NavigationArguments = new TabItemArguments()
+            tabItem.TabItemArguments = new TabItemArguments()
             {
                 InitialPageType = type,
                 NavigationArg = tabViewItemArgs
             };
-            tabItem.Control.ContentChanged += Control_ContentChanged;
+            //tabItem.Control.ContentChanged += Control_ContentChanged;
             await UpdateTabInfo(tabItem, tabViewItemArgs);
             AppInstances.Insert(atIndex == -1 ? AppInstances.Count : atIndex, tabItem);
         }
 
-        public static async void Control_ContentChanged(object sender, TabItemArguments e)
-        {
-            TabItem matchingTabItem = MainPageViewModel.AppInstances.SingleOrDefault(x => x.Control == sender);
-            if (matchingTabItem == null)
-            {
-                return;
-            }
-            await UpdateTabInfo(matchingTabItem, e.NavigationArg);
-        }
+        //public static async void Control_ContentChanged(object sender, TabItemArguments e)
+        //{
+        //    TabItem matchingTabItem = MainPageViewModel.AppInstances.SingleOrDefault(x => x.ItemContainer == sender);
+        //    if (matchingTabItem == null)
+        //    {
+        //        return;
+        //    }
+        //    await UpdateTabInfo(matchingTabItem, e.NavigationArg);
+        //}
 
         private async void StartAppCenter()
         {
